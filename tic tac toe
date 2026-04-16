@@ -1,97 +1,56 @@
-import java.util.Scanner;
+import java.util.*;
 
-class Train {
-    int seatNo;
-    String passengerName;
-    boolean isBooked;
+public class TicTacToe {
+    static char[][] board = {
+        {' ', ' ', ' '},
+        {' ', ' ', ' '},
+        {' ', ' ', ' '}
+    };
 
-    Train(int seatNo) {
-        this.seatNo = seatNo;
-        this.isBooked = false;
-    }
-
-    void book(String name) {
-        if (!isBooked) {
-            passengerName = name;
-            isBooked = true;
-            System.out.println("Seat " + seatNo + " booked successfully!");
-        } else {
-            System.out.println("Seat already booked.");
+    static void printBoard() {
+        for (int i = 0; i < 3; i++) {
+            System.out.println(board[i][0] + "|" + board[i][1] + "|" + board[i][2]);
+            if (i < 2) System.out.println("-+-+-");
         }
     }
 
-    void cancel() {
-        if (isBooked) {
-            isBooked = false;
-            passengerName = null;
-            System.out.println("Seat " + seatNo + " cancelled.");
-        } else {
-            System.out.println("Seat is already empty.");
+    static boolean checkWin(char p) {
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0]==p && board[i][1]==p && board[i][2]==p) return true;
+            if (board[0][i]==p && board[1][i]==p && board[2][i]==p) return true;
         }
+        if (board[0][0]==p && board[1][1]==p && board[2][2]==p) return true;
+        if (board[0][2]==p && board[1][1]==p && board[2][0]==p) return true;
+
+        return false;
     }
 
-    void display() {
-        if (isBooked) {
-            System.out.println("Seat " + seatNo + " -> " + passengerName);
-        } else {
-            System.out.println("Seat " + seatNo + " -> Available");
-        }
-    }
-}
-
-public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
+        char player = 'X';
 
-        Train[] seats = new Train[20]; // 5 seats
-        for (int i = 0; i < 20; i++) {
-            seats[i] = new Train(i + 1);
+        for (int turn = 0; turn < 9; turn++) {
+            printBoard();
+            System.out.println("Player " + player + " enter row and col (0-2): ");
+            int r = sc.nextInt();
+            int c = sc.nextInt();
+
+            if (board[r][c] == ' ') {
+                board[r][c] = player;
+
+                if (checkWin(player)) {
+                    printBoard();
+                    System.out.println("🎉 Player " + player + " wins!");
+                    return;
+                }
+
+                player = (player == 'X') ? 'O' : 'X';
+            } else {
+                System.out.println("Invalid move!");
+                turn--;
+            }
         }
 
-        int choice;
-
-        do {
-            System.out.println("\n--- Train Booking System ---");
-            System.out.println("1. Book Seat");
-            System.out.println("2. Cancel Seat");
-            System.out.println("3. View Seats");
-            System.out.println("4. Exit");
-            System.out.print("Enter choice: ");
-
-            choice = sc.nextInt();
-
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter seat number: ");
-                    int s = sc.nextInt();
-                    sc.nextLine(); // clear buffer
-                    System.out.print("Enter name: ");
-                    String name = sc.nextLine();
-                    seats[s - 1].book(name);
-                    break;
-
-                case 2:
-                    System.out.print("Enter seat number: ");
-                    int c = sc.nextInt();
-                    seats[c - 1].cancel();
-                    break;
-
-                case 3:
-                    for (Train t : seats) {
-                        t.display();
-                    }
-                    break;
-
-                case 4:
-                    System.out.println("Thank you!");
-                    break;
-
-                default:
-                    System.out.println("Invalid choice");
-            }
-
-        } while (choice != 4);
-
-        sc.close();
+        System.out.println("Draw!");
     }
 }
