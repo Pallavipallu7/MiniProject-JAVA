@@ -1,0 +1,141 @@
+import java.io.*;
+import java.util.Scanner;
+
+class Book {
+    int id;
+    String title;
+    String author;
+    boolean isIssued;
+
+    public Book(int id, String title, String author, boolean isIssued) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.isIssued = isIssued;
+    }
+
+    @Override
+    public String toString() {
+        // Formatted for file saving: CSV style
+        return id + "," + title + "," + author + "," + isIssued;
+    }
+}
+
+public class LibrarySystem {
+    private static final String FILE_NAME = "library_data.txt";
+    private static Book[] inventory = new Book[100]; 
+    private static int bookCount = 0;
+
+    public static void main(String[] args) {
+        loadData(); // Load existing books from file on startup
+        Scanner sc = new Scanner(System.in);
+        
+        while (true) {
+            System.out.println("\n========= LIBRARY MENU =========");
+            System.out.println("1. Add New Book");
+            System.out.println("2. Issue a Book");
+            System.out.println("3. Return a Book");
+            System.out.println("4. View Inventory");
+            System.out.println("5. Save and Exit");
+            System.out.print("Select Option: ");
+            
+            int choice = sc.nextInt();
+            sc.nextLine(); // Clear buffer
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter ID: ");
+                    int id = sc.nextInt(); sc.nextLine();
+                    System.out.print("Enter Title: ");
+                    String title = sc.nextLine();
+                    System.out.print("Enter Author: ");
+                    String author = sc.nextLine();
+                    
+                    if (bookCount < inventory.length) {
+                        inventory[bookCount++] = new Book(id, title, author, false);
+                        System.out.println("Book added!");
+                    } else {
+                        System.out.println("Library array full!");
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Enter Book ID to issue: ");
+                    int issueId = sc.nextInt();
+                    boolean foundIssue = false;
+                    for (int i = 0; i < bookCount; i++) {
+                        if (inventory[i].id == issueId && !inventory[i].isIssued) {
+                            inventory[i].isIssued = true;
+                            System.out.println("Successfully issued: " + inventory[i].title);
+                            foundIssue = true;
+                            break;
+                        }
+                    }
+                    if (!foundIssue) System.out.println("Book unavailable or ID not found.");
+                    break;
+
+                case 3:
+                    System.out.print("Enter Book ID to return: ");
+                    int returnId = sc.nextInt();
+                    boolean foundReturn = false;
+                    for (int i = 0; i < bookCount; i++) {
+                        if (inventory[i].id == returnId && inventory[i].isIssued) {
+                            inventory[i].isIssued = false;
+                            System.out.println("Successfully returned: " + inventory[i].title);
+                            foundReturn = true;
+                            break;
+                        }
+                    }
+                    if (!foundReturn) System.out.println("Check ID or issue status.");
+                    break;
+
+                case 4:
+                    System.out.println("\nCurrent Inventory:");
+                    for (int i = 0; i < bookCount; i++) {
+                        String status = inventory[i].isIssued ? "[ISSUED]" : "[AVAILABLE]";
+                        System.out.println("ID: " + inventory[i].id + " | " + inventory[i].title + " | " + status);
+                    }
+                    break;
+
+                case 5:
+                    saveData();
+                    System.out.println("Changes saved to " + FILE_NAME + ". Goodbye!");
+                    return;
+
+                default:
+                    System.out.println("Invalid input.");
+            }
+        }
+    }
+
+    private static void saveData() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_NAME))) {
+            for (int i = 0; i < bookCount; i++) {
+                writer.println(inventory[i].toString());
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving data.");
+        }
+    }
+
+    private static void loadData() {
+        File file = new File(FILE_NAME);
+        if (!file.exists()) return;
+
+        try (Scanner fs = new Scanner(file)) {
+            while (fs.hasNextLine() && bookCount < inventory.length) {
+                String line = fs.nextLine();
+                String[] p = line.split(",");
+                
+                inventory[bookCount++] = new Book(
+                    Integer.parseInt(p[0]), 
+                    p[1], 
+                    p[2], 
+                    Boolean.parseBoolean(p[3])
+                );
+            }
+        } catch (Exception e) {
+            System.out.println("Initializing new library database...");
+        }
+    }
+}
