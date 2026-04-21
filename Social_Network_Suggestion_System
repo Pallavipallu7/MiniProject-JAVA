@@ -1,0 +1,114 @@
+import java.io.*;
+import java.util.Scanner;
+
+public class SocialGraph {
+    private static final String FILE_NAME = "social_network.txt";
+    private static String[] names = new String[10]; 
+    private static int[][] adjMatrix = new int[10][10]; 
+    private static int userCount = 0;
+
+    public static void main(String[] args) {
+        loadGraph();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n--- SOCIAL GRAPH SYSTEM ---");
+            System.out.println("1. Add User\n2. Add Friendship\n3. Suggest Friends\n4. View Network\n5. Save & Exit");
+            System.out.print("Choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+                case 1: addUser(sc); break;
+                case 2: addFriendship(sc); break;
+                case 3: suggestFriends(sc); break;
+                case 4: displayMatrix(); break;
+                case 5: saveGraph(); System.exit(0);
+            }
+        }
+    }
+
+    private static void addUser(Scanner sc) {
+        if (userCount >= 10) {
+            System.out.println("Network capacity reached.");
+            return;
+        }
+        System.out.print("Enter name: ");
+        names[userCount++] = sc.nextLine();
+        System.out.println("User added at Index: " + (userCount - 1));
+    }
+
+    private static void addFriendship(Scanner sc) {
+        System.out.print("Enter Index of User 1: ");
+        int u1 = sc.nextInt();
+        System.out.print("Enter Index of User 2: ");
+        int u2 = sc.nextInt();
+
+        if (u1 < userCount && u2 < userCount) {
+            adjMatrix[u1][u2] = 1;
+            adjMatrix[u2][u1] = 1; 
+            System.out.println("They are now friends!");
+        }
+    }
+
+    private static void suggestFriends(Scanner sc) {
+        System.out.print("Enter your User Index: ");
+        int me = sc.nextInt();
+        System.out.println("Suggestions for " + names[me] + ":");
+
+        boolean found = false;
+        for (int friend = 0; friend < userCount; friend++) {
+            
+            if (adjMatrix[me][friend] == 1) {
+                
+                for (int fof = 0; fof < userCount; fof++) {
+                  
+                    if (adjMatrix[friend][fof] == 1 && fof != me && adjMatrix[me][fof] == 0) {
+                        System.out.println("-> " + names[fof] + " (Because you both know " + names[friend] + ")");
+                        found = true;
+                    }
+                }
+            }
+        }
+        if (!found) System.out.println("No new suggestions found.");
+    }
+
+    private static void displayMatrix() {
+        System.out.print("\t");
+        for(int i=0; i<userCount; i++) System.out.print(names[i] + "\t");
+        System.out.println();
+        for (int i = 0; i < userCount; i++) {
+            System.out.print(names[i] + "\t");
+            for (int j = 0; j < userCount; j++) {
+                System.out.print(adjMatrix[i][j] + "\t");
+            }
+            System.out.println();
+        }
+    }
+
+    private static void saveGraph() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_NAME))) {
+            pw.println(userCount);
+            for (int i = 0; i < userCount; i++) pw.println(names[i]);
+            for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    pw.print(adjMatrix[i][j] + (j == 9 ? "" : ","));
+                }
+                pw.println();
+            }
+        } catch (IOException e) { System.out.println("Save error."); }
+    }
+
+    private static void loadGraph() {
+        File f = new File(FILE_NAME);
+        if (!f.exists()) return;
+        try (Scanner fs = new Scanner(f)) {
+            userCount = Integer.parseInt(fs.nextLine());
+            for (int i = 0; i < userCount; i++) names[i] = fs.nextLine();
+            for (int i = 0; i < 10; i++) {
+                String[] line = fs.nextLine().split(",");
+                for (int j = 0; j < 10; j++) adjMatrix[i][j] = Integer.parseInt(line[j]);
+            }
+        } catch (Exception e) { }
+    }
+}
