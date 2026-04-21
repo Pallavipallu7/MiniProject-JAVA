@@ -1,0 +1,102 @@
+import java.io.*;
+import java.util.Scanner;
+
+public class TextEditor {
+    private static final String FILE_NAME = "editor_save.txt";
+    
+    // Arrays acting as Stacks
+    private static String[] undoStack = new String[100];
+    private static String[] redoStack = new String[100];
+    
+    private static int undoTop = -1;
+    private static int redoTop = -1;
+    private static String currentText = "";
+
+    public static void main(String[] args) {
+        loadFromFile();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n--- MINI TEXT EDITOR ---");
+            System.out.println("Current: " + (currentText.isEmpty() ? "[Empty]" : currentText));
+            System.out.println("1. Type Text\n2. Undo\n3. Redo\n4. Save & Exit");
+            System.out.print("Choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine(); 
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter text to append: ");
+                    String newText = sc.nextLine();
+                    pushUndo(currentText); 
+                    currentText += newText;
+                    clearRedo(); 
+                    break;
+                case 2:
+                    undo();
+                    break;
+                case 3:
+                    redo();
+                    break;
+                case 4:
+                    saveToFile();
+                    System.exit(0);
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+    }
+
+    private static void pushUndo(String state) {
+        if (undoTop < undoStack.length - 1) {
+            undoStack[++undoTop] = state;
+        }
+    }
+
+    private static void pushRedo(String state) {
+        if (redoTop < redoStack.length - 1) {
+            redoStack[++redoTop] = state;
+        }
+    }
+
+    private static void undo() {
+        if (undoTop >= 0) {
+            pushRedo(currentText);
+            currentText = undoStack[undoTop--]; 
+            System.out.println("Undo successful.");
+        } else {
+            System.out.println("Nothing to undo.");
+        }
+    }
+
+    private static void redo() {
+        if (redoTop >= 0) {
+            pushUndo(currentText); 
+            currentText = redoStack[redoTop--]; 
+            System.out.println("Redo successful.");
+        } else {
+            System.out.println("Nothing to redo.");
+        }
+    }
+
+    private static void clearRedo() {
+        redoTop = -1;
+    }
+
+    private static void saveToFile() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_NAME))) {
+            pw.println(currentText);
+            System.out.println("Text saved to " + FILE_NAME);
+        } catch (IOException e) {
+            System.out.println("Save error.");
+        }
+    }
+
+    private static void loadFromFile() {
+        File f = new File(FILE_NAME);
+        if (!f.exists()) return;
+        try (Scanner fs = new Scanner(f)) {
+            if (fs.hasNextLine()) currentText = fs.nextLine();
+        } catch (Exception e) { }
+    }
+}
