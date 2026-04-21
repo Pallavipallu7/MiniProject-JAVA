@@ -1,0 +1,142 @@
+import java.io.*;
+import java.util.Scanner;
+
+class Student {
+    int id;
+    String name;
+    double marks;
+
+    public Student(int id, String name, double marks) {
+        this.id = id;
+        this.name = name;
+        this.marks = marks;
+    }
+
+    @Override
+    public String toString() {
+        return id + "," + name + "," + marks;
+    }
+}
+
+public class StudentSystem {
+    private static final String FILE_NAME = "student_records.txt";
+    private static Student[] students = new Student[100];
+    private static int count = 0;
+
+    public static void main(String[] args) {
+        loadData();
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n--- SMART STUDENT MANAGEMENT ---");
+            System.out.println("1. Insert Student\n2. Delete Student\n3. Search by ID\n4. Sort by Marks (High to Low)\n5. View All\n6. Save & Exit");
+            System.out.print("Choice: ");
+            int choice = sc.nextInt();
+
+            switch (choice) {
+                case 1: insertStudent(sc); break;
+                case 2: deleteStudent(sc); break;
+                case 3: searchStudent(sc); break;
+                case 4: sortStudents(); break;
+                case 5: viewAll(); break;
+                case 6: saveData(); System.exit(0);
+                default: System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    private static void insertStudent(Scanner sc) {
+        System.out.print("Enter ID: ");
+        int id = sc.nextInt();
+        sc.nextLine(); 
+        System.out.print("Enter Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter Marks: ");
+        double marks = sc.nextDouble();
+
+        students[count++] = new Student(id, name, marks);
+        System.out.println("Student recorded.");
+    }
+
+    private static void deleteStudent(Scanner sc) {
+        System.out.print("Enter ID to delete: ");
+        int id = sc.nextInt();
+        int index = -1;
+
+        for (int i = 0; i < count; i++) {
+            if (students[i].id == id) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index != -1) {
+            // Shift elements to the left to "delete" the student
+            for (int i = index; i < count - 1; i++) {
+                students[i] = students[i + 1];
+            }
+            count--;
+            System.out.println("Student deleted.");
+        } else {
+            System.out.println("Student ID not found.");
+        }
+    }
+
+    private static void searchStudent(Scanner sc) {
+        System.out.print("Enter ID to search: ");
+        int id = sc.nextInt();
+        for (int i = 0; i < count; i++) {
+            if (students[i].id == id) {
+                System.out.println("Found: " + students[i].name + " | Marks: " + students[i].marks);
+                return;
+            }
+        }
+        System.out.println("Student not found.");
+    }
+
+    private static void sortStudents() {
+       
+        for (int i = 0; i < count - 1; i++) {
+            int maxIdx = i;
+            for (int j = i + 1; j < count; j++) {
+                if (students[j].marks > students[maxIdx].marks) {
+                    maxIdx = j;
+                }
+            }
+        
+            Student temp = students[maxIdx];
+            students[maxIdx] = students[i];
+            students[i] = temp;
+        }
+        System.out.println("Students sorted by marks (Highest first).");
+    }
+
+    private static void viewAll() {
+        System.out.println("\nID\tName\t\tMarks");
+        for (int i = 0; i < count; i++) {
+            System.out.println(students[i].id + "\t" + students[i].name + "\t\t" + students[i].marks);
+        }
+    }
+
+    private static void saveData() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_NAME))) {
+            for (int i = 0; i < count; i++) {
+                pw.println(students[i].toString());
+            }
+            System.out.println("Data saved to " + FILE_NAME);
+        } catch (IOException e) {
+            System.out.println("Error saving.");
+        }
+    }
+
+    private static void loadData() {
+        File f = new File(FILE_NAME);
+        if (!f.exists()) return;
+        try (Scanner fs = new Scanner(f)) {
+            while (fs.hasNextLine()) {
+                String[] p = fs.nextLine().split(",");
+                students[count++] = new Student(Integer.parseInt(p[0]), p[1], Double.parseDouble(p[2]));
+            }
+        } catch (Exception e) { /* New file */ }
+    }
+}
